@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Environment.props" Condition="Exists('Environment.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Wagonborn</AssemblyName>
+    <RootNamespace>Wagonborn</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <DebugType>portable</DebugType>
+    <Version>1.0.3</Version>
+    <Authors>blackhearthx</Authors>
+    <Description>Your wagon is a truck now.</Description>
+    <ExecutePrebuild>true</ExecutePrebuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JotunnLib" Version="2.29.2" />
+  </ItemGroup>
+
+  <Target Name="DeployToValheim" AfterTargets="Build">
+    <MakeDir Directories="$(MOD_DEPLOYPATH)" Condition="'$(MOD_DEPLOYPATH)' != ''" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MOD_DEPLOYPATH)" Condition="'$(MOD_DEPLOYPATH)' != '' And Exists('$(TargetPath)')" />
+  </Target>
+</Project>
