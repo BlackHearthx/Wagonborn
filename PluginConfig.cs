@@ -1,5 +1,4 @@
 using BepInEx.Configuration;
-using UnityEngine;
 
 namespace Wagonborn
 {
@@ -13,8 +12,6 @@ namespace Wagonborn
         internal static ConfigEntry<float> CartSearchRadius;
         internal static ConfigEntry<bool> PreventCartAutoDetach;
         internal static ConfigEntry<float> AttachLeash;
-        internal static ConfigEntry<bool> EnableQuickAttach;
-        internal static ConfigEntry<KeyboardShortcut> AttachHotKey;
         internal static ConfigEntry<float> AttachDistance;
         internal static ConfigEntry<bool> AllowOutOfPlaceAttach;
         internal static ConfigEntry<bool> EnableBuddyHelp;
@@ -67,7 +64,7 @@ namespace Wagonborn
                 "Portal",
                 "PreventCartAutoDetach",
                 true,
-                "While pulling, allow a longer leash before the cart auto-drops (see AttachLeash). Use V or Interact to unhitch anytime.");
+                "While pulling, allow a longer leash before the cart auto-drops (see AttachLeash). Unhitch with Use (E) anytime.");
 
             AttachLeash = config.Bind(
                 "Portal",
@@ -77,31 +74,19 @@ namespace Wagonborn
                     "Max meters from the hitch before auto-detach when PreventCartAutoDetach is on (vanilla is ~2).",
                     new AcceptableValueRange<float>(3f, 20f)));
 
-            EnableQuickAttach = config.Bind(
-                "Crew",
-                "EnableQuickAttach",
-                true,
-                "Hotkey attaches or detaches a nearby cart, even if you are a bit off the hitch.");
-
-            AttachHotKey = config.Bind(
-                "Crew",
-                "AttachHotKey",
-                new KeyboardShortcut(KeyCode.V),
-                "Key to attach / detach a nearby cart.");
-
             AttachDistance = config.Bind(
                 "Crew",
                 "AttachDistance",
                 3f,
                 new ConfigDescription(
-                    "Max meters from the hitch point for quick attach.",
+                    "Max meters from the hitch point when attaching with Use (E).",
                     new AcceptableValueRange<float>(1f, 5f)));
 
             AllowOutOfPlaceAttach = config.Bind(
                 "Crew",
                 "AllowOutOfPlaceAttach",
                 true,
-                "Allow attach when not perfectly lined up (uses AttachDistance).");
+                "Allow attach with Use (E) when not perfectly lined up (uses AttachDistance).");
 
             EnableBuddyHelp = config.Bind(
                 "Crew",

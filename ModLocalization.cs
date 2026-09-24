@@ -10,14 +10,13 @@ namespace Wagonborn
         {
             CustomLocalization loc = LocalizationManager.Instance.GetLocalization();
 
-            // skill, desc, hover, cartPortal, portalHint, hotkey ($1=key), buddyHint
+            // skill, desc, hover, cartPortal, portalHint, buddyHint
             Add(loc, "English",
                 "Hauling",
                 "Earned by pulling or helping push a moving cart. Higher Hauling makes carts easier to pull.",
                 "Hauling $1 — pull weight $2%",
                 "Cart travels with you",
                 "Portals take the cart",
-                "[$1] Attach / detach",
                 "Friends nearby lighten the load — and train Hauling");
 
             Add(loc, "Portuguese_Brazilian",
@@ -26,7 +25,6 @@ namespace Wagonborn
                 "Carreto $1 — peso de puxar $2%",
                 "Carroça vem junto",
                 "Portais levam a carroça",
-                "[$1] Acoplar / soltar",
                 "Amigos por perto aliviam o peso — e sobem Carreto");
 
             Add(loc, "Portuguese_European",
@@ -35,7 +33,6 @@ namespace Wagonborn
                 "Carreto $1 — peso a puxar $2%",
                 "Carro vem consigo",
                 "Portais levam o carro",
-                "[$1] Acoplar / soltar",
                 "Amigos por perto aliviam o peso — e sobem Carreto");
 
             Add(loc, "Spanish",
@@ -44,7 +41,6 @@ namespace Wagonborn
                 "Acarrero $1 — peso de tiro $2%",
                 "El carro viaja contigo",
                 "Los portales llevan el carro",
-                "[$1] Enganchar / soltar",
                 "Amigos cerca alivian la carga — y suben Acarrero");
 
             Add(loc, "French",
@@ -53,7 +49,6 @@ namespace Wagonborn
                 "Traction $1 — poids de traction $2%",
                 "La charrette voyage avec vous",
                 "Les portails emportent la charrette",
-                "[$1] Attacher / détacher",
                 "Les amis proches allègent la charge — et montent Traction");
 
             Add(loc, "German",
@@ -62,7 +57,6 @@ namespace Wagonborn
                 "Ziehen $1 — Zuggewicht $2%",
                 "Karren reist mit",
                 "Portale nehmen den Karren mit",
-                "[$1] An-/Abkoppeln",
                 "Freunde in der Nähe erleichtern die Last — und trainieren Ziehen");
 
             Add(loc, "Italian",
@@ -71,7 +65,6 @@ namespace Wagonborn
                 "Traino $1 — peso di traino $2%",
                 "Il carro viaggia con te",
                 "I portali portano il carro",
-                "[$1] Aggancia / stacca",
                 "Amici vicini alleggeriscono il carico — e allenano Traino");
 
             Add(loc, "Dutch",
@@ -80,7 +73,6 @@ namespace Wagonborn
                 "Slepen $1 — trekkgewicht $2%",
                 "Kar reist mee",
                 "Portalen nemen de kar mee",
-                "[$1] Koppelen / loskoppelen",
                 "Vrienden in de buurt verlichten de last — en trainen Slepen");
 
             Add(loc, "Swedish",
@@ -89,7 +81,6 @@ namespace Wagonborn
                 "Dragning $1 — dragvikt $2%",
                 "Vagnen följer med",
                 "Portaler tar vagnen",
-                "[$1] Koppla / lossa",
                 "Vänner nära lättar lasten — och tränar Dragning");
 
             Add(loc, "Polish",
@@ -98,7 +89,6 @@ namespace Wagonborn
                 "Wożenie $1 — ciężar ciągu $2%",
                 "Wóz podróżuje z tobą",
                 "Portale zabierają wóz",
-                "[$1] Podłącz / odłącz",
                 "Znajomi w pobliżu odciążają — i trenują Wożenie");
 
             Add(loc, "Russian",
@@ -107,7 +97,6 @@ namespace Wagonborn
                 "Возка $1 — вес тяги $2%",
                 "Телега идёт с вами",
                 "Порталы забирают телегу",
-                "[$1] Прицепить / отцепить",
                 "Друзья рядом облегчают груз — и качают Возку");
 
             Add(loc, "Ukrainian",
@@ -116,7 +105,6 @@ namespace Wagonborn
                 "Перевезення $1 — вага тяги $2%",
                 "Віз іде з вами",
                 "Портали забирають віз",
-                "[$1] Причепити / відчепити",
                 "Друзі поруч полегшують вагу — і качають Перевезення");
 
             Add(loc, "Czech",
@@ -125,7 +113,6 @@ namespace Wagonborn
                 "Tahání $1 — tahová váha $2%",
                 "Vůz cestuje s tebou",
                 "Portály berou vůz",
-                "[$1] Připojit / odpojit",
                 "Přátelé poblíž odlehčí náklad — a trénují Tahání");
 
             Add(loc, "Hungarian",
@@ -134,7 +121,6 @@ namespace Wagonborn
                 "Húzás $1 — húzósúly $2%",
                 "A szekér veled utazik",
                 "A portálok elviszik a szekeret",
-                "[$1] Csatol / old",
                 "Közeli barátok könnyítik a terhet — és fejlesztik a Húzást");
 
             Add(loc, "Romanian",
@@ -143,7 +129,6 @@ namespace Wagonborn
                 "Transport $1 — greutate de tracțiune $2%",
                 "Carul călătorește cu tine",
                 "Portalurile iau carul",
-                "[$1] Atașează / detașează",
                 "Prietenii apropiați ușurează sarcina — și antrenează Transport");
 
             Add(loc, "Turkish",
@@ -152,7 +137,6 @@ namespace Wagonborn
                 "Çekme $1 — çekiş ağırlığı $2%",
                 "Araba seninle gider",
                 "Portallar arabayı alır",
-                "[$1] Bağla / çöz",
                 "Yakındaki dostlar yükü hafifletir — ve Çekme yükseltir");
 
             Add(loc, "Chinese",
@@ -161,7 +145,6 @@ namespace Wagonborn
                 "拉车 $1 — 牵引重量 $2%",
                 "推车与你同行",
                 "传送门带走推车",
-                "[$1] 挂上 / 卸下",
                 "附近的朋友减轻负担 — 也提升拉车");
 
             Add(loc, "Chinese_Trad",
@@ -170,7 +153,6 @@ namespace Wagonborn
                 "拉車 $1 — 牽引重量 $2%",
                 "推車與你同行",
                 "傳送門帶走推車",
-                "[$1] 掛上 / 卸下",
                 "附近的朋友減輕負擔 — 也提升拉車");
 
             Add(loc, "Japanese",
@@ -179,7 +161,6 @@ namespace Wagonborn
                 "運搬 $1 — 引き重さ $2%",
                 "荷車も一緒に移動",
                 "ポータルで荷車も運ぶ",
-                "[$1] 連結 / 解除",
                 "近くの仲間が負担を軽くする — 運搬も上がる");
 
             Add(loc, "Korean",
@@ -188,7 +169,6 @@ namespace Wagonborn
                 "운반 $1 — 견인 무게 $2%",
                 "수레가 함께 이동",
                 "포털이 수레를 데려감",
-                "[$1] 연결 / 해제",
                 "근처 친구가 짐을 덜어 줌 — 운반도 오른다");
         }
 
@@ -200,7 +180,6 @@ namespace Wagonborn
             string hover,
             string cartPortal,
             string cartPortalHint,
-            string hotkey,
             string buddyHint)
         {
             loc.AddTranslation(language, new Dictionary<string, string>
@@ -210,7 +189,6 @@ namespace Wagonborn
                 { "wagonborn_hover", hover },
                 { "wagonborn_cart_portal", cartPortal },
                 { "wagonborn_cart_portal_hint", cartPortalHint },
-                { "wagonborn_hotkey", hotkey },
                 { "wagonborn_buddy_hint", buddyHint }
             });
         }

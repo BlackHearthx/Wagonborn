@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.2
+- Removed the V hotkey hitch — attach and detach with Use (E) only
+
 ## 1.2.1
 - Unhitch reliably: hotkey always drops the cart you are pulling (even when it is behind you)
 - Out-of-place hitch no longer glues the cart within attach range

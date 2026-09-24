@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Wagonborn
 {
     /// <summary>
-    /// Quick attach/detach hotkey + buddy mass help (nearby players lighten the load).
-    /// Soft-skips when BetterCarts is loaded to avoid double hotkey / double mass cut.
+    /// Buddy mass help (nearby players lighten the load) + slightly forgiving hitch on Use.
+    /// Soft-skips buddy mass when BetterCarts is loaded to avoid double mass cut.
     /// </summary>
     [HarmonyPatch]
     internal static class CartCrew
@@ -27,70 +27,11 @@ namespace Wagonborn
                 if (_betterCartsPresent == true)
                 {
                     Jotunn.Logger.LogInfo(
-                        "Wagonborn: BetterCarts detected — quick-attach and buddy mass deferred to it (Hauling XP for helpers still runs).");
+                        "Wagonborn: BetterCarts detected — buddy mass deferred to it (Hauling XP for helpers still runs).");
                 }
             }
 
             return _betterCartsPresent != true;
-        }
-
-        internal static void TickHotkey()
-        {
-            if (!OwnCrewActive() || !PluginConfig.EnableQuickAttach.Value)
-            {
-                return;
-            }
-
-            if (IgnoreKeyPresses() || !PluginConfig.AttachHotKey.Value.IsDown())
-            {
-                return;
-            }
-
-            Player player = Player.m_localPlayer;
-            if (player == null)
-            {
-                return;
-            }
-
-            // Detach first: while pulling, the cart body is behind you and often
-            // outside the hitch sphere — still unhitch that cart on the hotkey.
-            Vagon attached = FindAttachedCart(player);
-            if (attached != null)
-            {
-                attached.Interact(player, false, false);
-                return;
-            }
-
-            float search = Mathf.Max(PluginConfig.AttachDistance.Value, 5f);
-            Vagon cart = FindNearestToggleCart(player, search);
-            if (cart != null)
-            {
-                cart.Interact(player, false, false);
-            }
-        }
-
-        private static Vagon FindAttachedCart(Player player)
-        {
-            Vagon[] carts;
-            try
-            {
-                carts = Object.FindObjectsByType<Vagon>(FindObjectsSortMode.None);
-            }
-            catch
-            {
-                carts = Object.FindObjectsOfType<Vagon>();
-            }
-
-            for (int i = 0; i < carts.Length; i++)
-            {
-                Vagon cart = carts[i];
-                if (cart != null && cart.IsAttached(player))
-                {
-                    return cart;
-                }
-            }
-
-            return null;
         }
 
         internal static int CountHelpers(Vagon cart)
@@ -177,87 +118,13 @@ namespace Wagonborn
             return best;
         }
 
-        private static Vagon FindNearestToggleCart(Player player, float maxDist)
-        {
-            Vector3 origin = player.transform.position + Vector3.up;
-            Collider[] hits = Physics.OverlapSphere(origin, maxDist);
-            Vagon best = null;
-            float bestDist = maxDist;
-
-            for (int i = 0; i < hits.Length; i++)
-            {
-                Collider col = hits[i];
-                if (col == null)
-                {
-                    continue;
-                }
-
-                Vagon cart = col.GetComponentInParent<Vagon>();
-                if (cart == null || col.attachedRigidbody == null)
-                {
-                    continue;
-                }
-
-                if (!cart.IsAttached(player) && cart.InUse())
-                {
-                    continue;
-                }
-
-                float dist = Vector3.Distance(col.ClosestPoint(origin), origin);
-                if (dist < bestDist)
-                {
-                    bestDist = dist;
-                    best = cart;
-                }
-            }
-
-            return best;
-        }
-
-        private static bool IgnoreKeyPresses()
-        {
-            if (ZNetScene.instance == null || Player.m_localPlayer == null)
-            {
-                return true;
-            }
-
-            if (Minimap.IsOpen() || Console.IsVisible() || TextInput.IsVisible())
-            {
-                return true;
-            }
-
-            if (ZNet.instance != null && ZNet.instance.InPasswordDialog())
-            {
-                return true;
-            }
-
-            if (Chat.instance != null && Chat.instance.HasFocus())
-            {
-                return true;
-            }
-
-            if (StoreGui.IsVisible() || InventoryGui.IsVisible() || Menu.IsVisible())
-            {
-                return true;
-            }
-
-            if (TextViewer.instance != null && TextViewer.instance.IsVisible())
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Vagon), "CanAttach")]
         private static bool CanAttachPrefix(Vagon __instance, GameObject go, ref bool __result)
         {
-            // Only relax the hitch check when grabbing on. While already attached,
-            // vanilla (or PreventCartAutoDetach) must own the distance check —
-            // otherwise the cart feels glued within AttachDistance.
-            if (!OwnCrewActive() || !PluginConfig.EnableQuickAttach.Value ||
-                !PluginConfig.AllowOutOfPlaceAttach.Value)
+            // Slightly forgiving hitch on Use (E). While already attached, leave
+            // distance checks to vanilla / AttachLeash so the cart does not feel glued.
+            if (!OwnCrewActive() || !PluginConfig.AllowOutOfPlaceAttach.Value)
             {
                 return true;
             }

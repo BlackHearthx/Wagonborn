@@ -15,7 +15,7 @@ namespace Wagonborn
     {
         public const string PluginGUID = "com.blackhearthx.wagonborn";
         public const string PluginName = "Wagonborn";
-        public const string PluginVersion = "1.2.1";
+        public const string PluginVersion = "1.2.2";
 
         internal static WagonbornPlugin Instance { get; private set; }
         internal static Harmony Harmony { get; private set; }
@@ -42,7 +42,6 @@ namespace Wagonborn
 
         private void Update()
         {
-            CartCrew.TickHotkey();
             HaulingProgress.Tick();
         }
 

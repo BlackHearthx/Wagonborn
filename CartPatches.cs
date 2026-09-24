@@ -57,15 +57,6 @@ namespace Wagonborn
 
             __result += "\n" + line;
 
-            if (CartCrew.OwnCrewActive() && PluginConfig.EnableQuickAttach.Value)
-            {
-                string key = PluginConfig.AttachHotKey.Value.ToString();
-                string hotkey = Localization.instance != null
-                    ? Localization.instance.Localize("$wagonborn_hotkey", key)
-                    : "[" + key + "] Attach / detach";
-                __result += "\n" + hotkey;
-            }
-
             if (CartPortal.IsActive() && player != null && __instance.IsAttached(player))
             {
                 string portalHint = Localization.instance != null

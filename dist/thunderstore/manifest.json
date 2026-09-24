@@ -1,8 +1,8 @@
 {
   "name": "Wagonborn",
-  "version_number": "1.2.1",
+  "version_number": "1.2.2",
   "website_url": "https://github.com/BlackHearthx/Wagonborn",
-  "description": "Your wagon is a truck now. Hauling skill, portal carts, quick hitch, and buddy push that trains too.",
+  "description": "Your wagon is a truck now. Hauling skill, portal carts, and buddy push that trains too.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2200",
     "ValheimModding-Jotunn-2.29.2"
