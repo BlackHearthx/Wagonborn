@@ -38,5 +38,8 @@ bld/
 dist/*.zip
 dist/thunderstore/*.dll
 
+# Decompiled / reference mods (not shipped)
+_ref/
+
 # Keep Environment.props in repo for this machine-local Valheim path
 # (contains no secrets)

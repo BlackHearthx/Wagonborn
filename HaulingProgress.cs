@@ -3,12 +3,12 @@ using UnityEngine;
 namespace Wagonborn
 {
     /// <summary>
-    /// Grants Hauling XP while the local player pulls a moving cart.
-    /// Caches the attached cart — no full-scene scan every frame.
+    /// Grants Hauling XP while the local player pulls — or helps push — a moving cart.
     /// </summary>
     internal static class HaulingProgress
     {
         private static Vagon _attached;
+        private static Vagon _helping;
         private static float _rescanAt;
 
         internal static void Tick()
@@ -22,28 +22,56 @@ namespace Wagonborn
             if (player == null)
             {
                 _attached = null;
+                _helping = null;
                 return;
             }
 
             if (_attached == null || !_attached || !_attached.IsAttached(player))
             {
                 _attached = null;
-                if (Time.time < _rescanAt)
+                if (Time.time >= _rescanAt)
                 {
-                    return;
-                }
-
-                _rescanAt = Time.time + 0.5f;
-                _attached = FindAttachedCart(player);
-                if (_attached == null)
-                {
-                    return;
+                    _rescanAt = Time.time + 0.5f;
+                    _attached = FindAttachedCart(player);
                 }
             }
 
-            Rigidbody body = _attached.m_body != null
-                ? _attached.m_body
-                : _attached.GetComponent<Rigidbody>();
+            if (_attached != null)
+            {
+                _helping = null;
+                GrantXp(player, _attached, 1f);
+                return;
+            }
+
+            if (!PluginConfig.EnableBuddyHelp.Value)
+            {
+                _helping = null;
+                return;
+            }
+
+            if (_helping == null || !_helping || !_helping.InUse() ||
+                Vector3.Distance(player.transform.position, _helping.transform.position) >
+                PluginConfig.BuddyRange.Value)
+            {
+                _helping = null;
+                if (Time.time >= _rescanAt)
+                {
+                    _rescanAt = Time.time + 0.5f;
+                    _helping = CartCrew.FindCartBeingHelped(player);
+                }
+            }
+
+            if (_helping != null)
+            {
+                GrantXp(player, _helping, PluginConfig.BuddyXpMultiplier.Value);
+            }
+        }
+
+        private static void GrantXp(Player player, Vagon cart, float xpScale)
+        {
+            Rigidbody body = cart.m_body != null
+                ? cart.m_body
+                : cart.GetComponent<Rigidbody>();
             if (body == null)
             {
                 return;
@@ -55,7 +83,7 @@ namespace Wagonborn
             }
 
             float weightFactor = Mathf.Max(1f, body.mass / Mathf.Max(1f, PluginConfig.WeightXpScale.Value));
-            float xp = PluginConfig.XpPerSecond.Value * Time.deltaTime * weightFactor;
+            float xp = PluginConfig.XpPerSecond.Value * Time.deltaTime * weightFactor * xpScale;
             player.RaiseSkill(HaulingSkill.SkillType, xp);
         }
 

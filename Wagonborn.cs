@@ -8,12 +8,14 @@ namespace Wagonborn
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [BepInDependency(Main.ModGuid)]
+    [BepInDependency("zenox.teleporteverything", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("TastyChickenLegs.BetterCarts", BepInDependency.DependencyFlags.SoftDependency)]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
     public class WagonbornPlugin : BaseUnityPlugin
     {
         public const string PluginGUID = "com.blackhearthx.wagonborn";
         public const string PluginName = "Wagonborn";
-        public const string PluginVersion = "1.0.3";
+        public const string PluginVersion = "1.2.1";
 
         internal static WagonbornPlugin Instance { get; private set; }
         internal static Harmony Harmony { get; private set; }
@@ -40,6 +42,7 @@ namespace Wagonborn
 
         private void Update()
         {
+            CartCrew.TickHotkey();
             HaulingProgress.Tick();
         }
 

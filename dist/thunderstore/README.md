@@ -2,27 +2,81 @@
 
 **Your wagon is a truck now.**
 
-A Hauling skill for Valheim by **blackhearthx** (v1.0.3). Pull a moving cart to level the skill. The higher it goes, the easier the cart is to pull. Vanilla carts stay vanilla — no extra models.
+By **BlackHearthx**
 
-## How to use
+Pull a moving cart and the road starts teaching you. Friends who shove from behind learn the same craft. Hitch fast, haul far, take the cart through the portal with you.
 
-1. Install with a mod manager (Thunderstore / r2modman). Jötunn is pulled in automatically.
-2. Load a world, attach to a cart, and **walk**. Standing still does not grant XP.
-3. Open the skills menu. **Hauling** (Carreto in Portuguese) appears after the first bit of XP.
-4. Look at a cart to see your skill level and current pull weight.
+Wagonborn is a hauler’s skill pack for vanilla carts — no fancy new wagon models, just weight that answers to practice, a quick hitch, crew help, and a cart that stays with the caravan.
 
-Heavier moving loads train faster. At level 100, pull weight is reduced by up to 50% — hills still matter.
+**Compat:** If you also use **TeleportEverything**, that mod handles cart portals. If you also use **BetterCarts**, that mod handles quick hitch and buddy mass (helpers still earn Hauling here).
+
+## What you get
+
+| | |
+| --- | --- |
+| **Hauling** | Skill from pulling (or helping push) a moving cart — higher level, lighter pull |
+| **Quick hitch** | Hotkey attach / detach nearby, even when you are a bit off the tongue |
+| **Buddy push** | Friends within range lighten the load; they train Hauling too |
+| **Portal cart** | Attached cart travels through portals and dungeon rune stones, then re-attaches |
+| **Steady hitch** | Optional: cart only drops when you unhitch (or tip) — not from a few meters of drift |
+
+## Your first session
+
+1. Install with a mod manager (Thunderstore / r2modman). Jötunn comes with it.
+2. Load a world, walk up to a cart, press **V** (or look and use the usual interact).
+3. **Walk** while hitched. Standing still does not train.
+4. Open skills — **Hauling** (Carreto) appears after the first XP.
+5. Hover the cart to see level, pull weight, hitch key, and portal note.
+6. Take a portal while hitched — cart should arrive with you.
+
+## How to play
+
+Heavier moving loads train faster. At Hauling 100, pull weight can drop by up to half — hills still matter.
+
+In co-op, stand near a friend who is pulling. The cart gets lighter for them, and you earn Hauling while it moves. Up to four helpers count.
+
+## Controls at a glance
+
+| Action | Default |
+| --- | --- |
+| Quick attach / detach | **V** (configurable) |
+| Vanilla hitch | Look at cart → Use |
+| Train Hauling | Pull or help push while the cart is moving |
+| Portal with cart | Walk through portal / dungeon stone while hitched |
+
+## Compat and notes
+
+- Host and every client need the mod.
+- Do not stack **BetterCarts** mass/hotkey options with Wagonborn’s Crew section — pick one hitch/buddy stack (Wagonborn soft-defers if BetterCarts is loaded).
+- **TeleportEverything** owns cart portal transport when both are present.
+- Vanilla cart look stays vanilla.
+
+## Como usar (PT-BR)
+
+1. Instale pelo gerenciador de mods (Jötunn vem junto).
+2. Aproxime da carroça e aperte **V** para acoplar / soltar (ou use o interact normal).
+3. Ande puxando — parado não sobe **Carreto**.
+4. Amigos perto aliviam o peso e também sobem Carreto.
+5. Portal com a carroça acoplada: ela viaja e reatacha na chegada.
 
 ## Requirements
 
 - [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
 - [Jötunn](https://thunderstore.io/c/valheim/p/ValheimModding/Jotunn/)
 
-Install on the host/server and every client.
-
 ## Config
 
-After the first launch: `BepInEx/config/com.blackhearthx.wagonborn.cfg`
+After first launch: `BepInEx/config/com.blackhearthx.wagonborn.cfg`
+
+| Section | Setting | Default | Notes |
+| --- | --- | --- | --- |
+| Hauling | MaxSkillMassReduction | 0.50 | Mass cut at skill 100 |
+| Hauling | XpPerSecond | 0.35 | Base XP while the cart moves |
+| Portal | EnableCartPortal | true | Cart through portals |
+| Portal | PreventCartAutoDetach | true | No auto-drop from short drift |
+| Crew | AttachHotKey | V | Quick hitch |
+| Crew | EnableBuddyHelp | true | Friends lighten + earn XP |
+| Crew | BuddyMassReduction | 0.15 | Cut per helper |
 
 ## Identity
 

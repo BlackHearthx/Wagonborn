@@ -14,7 +14,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <DebugType>portable</DebugType>
-    <Version>1.0.3</Version>
+    <Version>1.2.1</Version>
     <Authors>blackhearthx</Authors>
     <Description>Your wagon is a truck now.</Description>
     <ExecutePrebuild>true</ExecutePrebuild>
@@ -22,6 +22,12 @@
 
   <ItemGroup>
     <PackageReference Include="JotunnLib" Version="2.29.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="_ref\**" />
+    <None Remove="_ref\**" />
+    <EmbeddedResource Remove="_ref\**" />
   </ItemGroup>
 
   <Target Name="DeployToValheim" AfterTargets="Build">
