@@ -170,6 +170,70 @@ namespace Wagonborn
                 "수레가 함께 이동",
                 "포털이 수레를 데려감",
                 "근처 친구가 짐을 덜어 줌 — 운반도 오른다");
+
+            AddMapPin(loc, "English",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Hide from map",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Show on map",
+                "Cart marked on the map",
+                "Cart pin cleared",
+                "Cart",
+                "On the map");
+            AddMapPin(loc, "Portuguese_Brazilian",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Tirar do mapa",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Mostrar no mapa",
+                "Carroça marcada no mapa",
+                "Marcador da carroça removido",
+                "Carroça",
+                "No mapa");
+            AddMapPin(loc, "Portuguese_European",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Tirar do mapa",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Mostrar no mapa",
+                "Carro marcado no mapa",
+                "Marcador do carro removido",
+                "Carro",
+                "No mapa");
+            AddMapPin(loc, "Spanish",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Quitar del mapa",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Mostrar en el mapa",
+                "Carro marcado en el mapa",
+                "Marcador del carro quitado",
+                "Carro",
+                "En el mapa");
+            AddMapPin(loc, "French",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Retirer de la carte",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Afficher sur la carte",
+                "Charrette marquée sur la carte",
+                "Marqueur retiré",
+                "Charrette",
+                "Sur la carte");
+            AddMapPin(loc, "German",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Von der Karte nehmen",
+                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Auf der Karte zeigen",
+                "Karren auf der Karte markiert",
+                "Kartenmarkierung entfernt",
+                "Karren",
+                "Auf der Karte");
+        }
+
+        private static void AddMapPin(
+            CustomLocalization loc,
+            string language,
+            string hintHide,
+            string hintShow,
+            string on,
+            string off,
+            string name,
+            string marked)
+        {
+            loc.AddTranslation(language, new Dictionary<string, string>
+            {
+                { "wagonborn_mappin_hint_hide", hintHide },
+                { "wagonborn_mappin_hint_show", hintShow },
+                { "wagonborn_mappin_on", on },
+                { "wagonborn_mappin_off", off },
+                { "wagonborn_mappin_name", name },
+                { "wagonborn_mappin_marked", marked }
+            });
         }
 
         private static void Add(

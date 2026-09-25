@@ -72,6 +72,25 @@ namespace Wagonborn
                     : "Friends nearby lighten the load — and train Hauling";
                 __result += "\n" + buddy;
             }
+
+            if (CartMapPin.IsEnabled())
+            {
+                if (CartMapPin.IsMarked(__instance))
+                {
+                    string marked = Localization.instance != null
+                        ? Localization.instance.Localize("$wagonborn_mappin_marked")
+                        : "On the map";
+                    __result += "\n" + marked;
+                }
+
+                string pinHint = Localization.instance != null
+                    ? Localization.instance.Localize(
+                        CartMapPin.IsMarked(__instance)
+                            ? "$wagonborn_mappin_hint_hide"
+                            : "$wagonborn_mappin_hint_show")
+                    : "[$KEY_ALT + $KEY_USE] Map pin";
+                __result += "\n" + pinHint;
+            }
         }
 
         private static void StripOldVisuals(Vagon cart)

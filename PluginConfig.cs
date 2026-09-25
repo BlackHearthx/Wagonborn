@@ -19,6 +19,7 @@ namespace Wagonborn
         internal static ConfigEntry<int> MaxBuddies;
         internal static ConfigEntry<float> BuddyMassReduction;
         internal static ConfigEntry<float> BuddyXpMultiplier;
+        internal static ConfigEntry<bool> EnableCartMapPin;
 
         internal static void Bind(ConfigFile config)
         {
@@ -125,6 +126,12 @@ namespace Wagonborn
                 new ConfigDescription(
                     "Hauling XP rate for helpers vs the puller (1 = same rate).",
                     new AcceptableValueRange<float>(0.25f, 1.5f)));
+
+            EnableCartMapPin = config.Bind(
+                "Map",
+                "EnableCartMapPin",
+                true,
+                "Every cart shows a live map pin by default. Alt+Use on a cart hides or shows that one only.");
         }
     }
 }

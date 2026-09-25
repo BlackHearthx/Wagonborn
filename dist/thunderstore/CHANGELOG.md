@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.1
+- Every cart is on the map by default; Alt+Use hides or shows that cart only (each pin is independent)
+
+## 1.3.0
+- Live map pin for carts (same idea as Hearthwife): moves in real time on the minimap and world map
+- Alt+Use on a cart to mark or clear; hitching can auto-mark (config)
+- Wheel icon on the pin so it reads as a cart, not a generic mark
+
 ## 1.2.2
 - Removed the V hotkey hitch — attach and detach with Use (E) only
 
