@@ -1,6 +1,6 @@
 {
   "name": "Wagonborn",
-  "version_number": "1.3.1",
+  "version_number": "1.3.2",
   "website_url": "https://github.com/BlackHearthx/Wagonborn",
   "description": "Your wagon is a truck now. Hauling skill, portal carts, buddy push, and a live map pin.",
   "dependencies": [

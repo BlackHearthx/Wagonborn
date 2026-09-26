@@ -7,7 +7,7 @@ namespace Wagonborn
         internal static ConfigEntry<float> MaxSkillMassReduction;
         internal static ConfigEntry<float> XpPerSecond;
         internal static ConfigEntry<float> MinSpeedForXp;
-        internal static ConfigEntry<float> WeightXpScale;
+        internal static ConfigEntry<float> LoadXpScale;
         internal static ConfigEntry<bool> EnableCartPortal;
         internal static ConfigEntry<float> CartSearchRadius;
         internal static ConfigEntry<bool> PreventCartAutoDetach;
@@ -27,7 +27,9 @@ namespace Wagonborn
                 "Hauling",
                 "MaxSkillMassReduction",
                 0.50f,
-                "Cart mass reduction at Hauling 100 (0.50 = 50%). Hills still matter.");
+                new ConfigDescription(
+                    "Cart mass reduction at Hauling 100 (0.50 = 50%). Hills still matter.",
+                    new AcceptableValueRange<float>(0f, 0.8f)));
 
             XpPerSecond = config.Bind(
                 "Hauling",
@@ -41,11 +43,13 @@ namespace Wagonborn
                 0.6f,
                 "Cart must move faster than this (m/s) to grant XP.");
 
-            WeightXpScale = config.Bind(
+            LoadXpScale = config.Bind(
                 "Hauling",
-                "WeightXpScale",
-                80f,
-                "Heavier carts grant more XP. XP is multiplied by mass / this value.");
+                "LoadXpScale",
+                240f,
+                new ConfigDescription(
+                    "A full cart teaches more. XP is multiplied by (cart + cargo weight) / this, never below 1. An empty cart weighs about 20.",
+                    new AcceptableValueRange<float>(20f, 2000f)));
 
             EnableCartPortal = config.Bind(
                 "Portal",
@@ -131,7 +135,7 @@ namespace Wagonborn
                 "Map",
                 "EnableCartMapPin",
                 true,
-                "Every cart shows a live map pin by default. Alt+Use on a cart hides or shows that one only.");
+                "Every cart shows a live map pin by default. Shift+E on a cart hides or shows that one, just for you.");
         }
     }
 }

@@ -1,14 +1,21 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Wagonborn
 {
     /// <summary>
     /// Grants Hauling XP while the local player pulls — or helps push — a moving cart.
+    /// Speed comes from the cart's position so helpers (non-owners) measure it the same way.
     /// </summary>
     internal static class HaulingProgress
     {
-        private static Vagon _attached;
-        private static Vagon _helping;
+        private const float RescanInterval = 0.5f;
+        private const float MaxPlausibleSpeed = 20f;
+
+        private static Vagon _cart;
+        private static bool _pulling;
+        private static Vector3 _lastPos;
+        private static float _speed;
         private static float _rescanAt;
 
         internal static void Tick()
@@ -21,85 +28,113 @@ namespace Wagonborn
             Player player = Player.m_localPlayer;
             if (player == null)
             {
-                _attached = null;
-                _helping = null;
+                SetCart(null, false);
                 return;
             }
 
-            if (_attached == null || !_attached || !_attached.IsAttached(player))
+            if (!IsStillEarning(player))
             {
-                _attached = null;
-                if (Time.time >= _rescanAt)
+                if (Time.time < _rescanAt)
                 {
-                    _rescanAt = Time.time + 0.5f;
-                    _attached = FindAttachedCart(player);
+                    return;
+                }
+
+                _rescanAt = Time.time + RescanInterval;
+                Vagon pulled = FindAttachedCart(player);
+                if (pulled != null)
+                {
+                    SetCart(pulled, true);
+                }
+                else
+                {
+                    SetCart(CartCrew.FindCartBeingHelped(player), false);
+                }
+
+                if (_cart == null)
+                {
+                    return;
                 }
             }
 
-            if (_attached != null)
+            float dt = Time.deltaTime;
+            if (dt <= 0f)
             {
-                _helping = null;
-                GrantXp(player, _attached, 1f);
                 return;
             }
 
-            if (!PluginConfig.EnableBuddyHelp.Value)
+            Vector3 pos = _cart.transform.position;
+            float instant = Vector3.Distance(pos, _lastPos) / dt;
+            _lastPos = pos;
+
+            // Portal jumps and sync snaps are not hauling.
+            if (instant > MaxPlausibleSpeed)
             {
-                _helping = null;
+                instant = 0f;
+            }
+
+            _speed = Mathf.Lerp(_speed, instant, 0.2f);
+            if (_speed < PluginConfig.MinSpeedForXp.Value)
+            {
                 return;
             }
 
-            if (_helping == null || !_helping || !_helping.InUse() ||
-                Vector3.Distance(player.transform.position, _helping.transform.position) >
-                PluginConfig.BuddyRange.Value)
-            {
-                _helping = null;
-                if (Time.time >= _rescanAt)
-                {
-                    _rescanAt = Time.time + 0.5f;
-                    _helping = CartCrew.FindCartBeingHelped(player);
-                }
-            }
-
-            if (_helping != null)
-            {
-                GrantXp(player, _helping, PluginConfig.BuddyXpMultiplier.Value);
-            }
+            float load = CartLoadMass(_cart);
+            float weightFactor = Mathf.Max(1f, load / Mathf.Max(1f, PluginConfig.LoadXpScale.Value));
+            float scale = _pulling ? 1f : PluginConfig.BuddyXpMultiplier.Value;
+            player.RaiseSkill(HaulingSkill.SkillType, PluginConfig.XpPerSecond.Value * dt * weightFactor * scale);
         }
 
-        private static void GrantXp(Player player, Vagon cart, float xpScale)
+        /// <summary>Vanilla UpdateMass formula, before any skill/buddy cut.</summary>
+        internal static float CartLoadMass(Vagon cart)
         {
-            Rigidbody body = cart.m_body != null
-                ? cart.m_body
-                : cart.GetComponent<Rigidbody>();
-            if (body == null)
+            float mass = cart.m_baseMass;
+            Inventory inv = cart.m_container != null ? cart.m_container.GetInventory() : null;
+            if (inv != null)
             {
-                return;
+                mass += inv.GetTotalWeight() * cart.m_itemWeightMassFactor;
             }
 
-            if (body.linearVelocity.magnitude < PluginConfig.MinSpeedForXp.Value)
+            return mass;
+        }
+
+        private static bool IsStillEarning(Player player)
+        {
+            if (_cart == null || !_cart)
             {
-                return;
+                return false;
             }
 
-            float weightFactor = Mathf.Max(1f, body.mass / Mathf.Max(1f, PluginConfig.WeightXpScale.Value));
-            float xp = PluginConfig.XpPerSecond.Value * Time.deltaTime * weightFactor * xpScale;
-            player.RaiseSkill(HaulingSkill.SkillType, xp);
+            if (_pulling)
+            {
+                return _cart.IsAttached(player);
+            }
+
+            return PluginConfig.EnableBuddyHelp.Value &&
+                   _cart.IsAttached() &&
+                   !_cart.IsAttached(player) &&
+                   Vector3.Distance(player.transform.position, _cart.transform.position) <=
+                   PluginConfig.BuddyRange.Value;
+        }
+
+        private static void SetCart(Vagon cart, bool pulling)
+        {
+            if (cart != _cart)
+            {
+                _speed = 0f;
+                if (cart != null)
+                {
+                    _lastPos = cart.transform.position;
+                }
+            }
+
+            _cart = cart;
+            _pulling = pulling;
         }
 
         private static Vagon FindAttachedCart(Player player)
         {
-            Vagon[] carts;
-            try
-            {
-                carts = Object.FindObjectsByType<Vagon>(FindObjectsSortMode.None);
-            }
-            catch
-            {
-                carts = Object.FindObjectsOfType<Vagon>();
-            }
-
-            for (int i = 0; i < carts.Length; i++)
+            List<Vagon> carts = Vagon.m_instances;
+            for (int i = 0; i < carts.Count; i++)
             {
                 Vagon cart = carts[i];
                 if (cart != null && cart.IsAttached(player))

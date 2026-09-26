@@ -11,16 +11,14 @@ namespace Wagonborn
             CustomLocalization loc = LocalizationManager.Instance.GetLocalization();
 
             // skill, desc, hover, cartPortal, portalHint, buddyHint
-            Add(loc, "English",
-                "Hauling",
+            Add(loc, "English", "Hauling",
                 "Earned by pulling or helping push a moving cart. Higher Hauling makes carts easier to pull.",
                 "Hauling $1 — pull weight $2%",
                 "Cart travels with you",
                 "Portals take the cart",
                 "Friends nearby lighten the load — and train Hauling");
 
-            Add(loc, "Portuguese_Brazilian",
-                "Carreto",
+            Add(loc, "Portuguese_Brazilian", "Carreto",
                 "Sobe puxando ou ajudando a empurrar uma carroça em movimento. Quanto maior o nível, mais leve ela fica.",
                 "Carreto $1 — peso de puxar $2%",
                 "Carroça vem junto",
@@ -172,67 +170,125 @@ namespace Wagonborn
                 "근처 친구가 짐을 덜어 줌 — 운반도 오른다");
 
             AddMapPin(loc, "English",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Hide from map",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Show on map",
-                "Cart marked on the map",
-                "Cart pin cleared",
+                "On the map  [<color=yellow><b>Shift+E</b></color>] hide",
+                "Off the map  [<color=yellow><b>Shift+E</b></color>] show",
+                "On the map",
+                "Off the map",
                 "Cart",
-                "On the map");
+                "$1 nearby — lighter haul");
             AddMapPin(loc, "Portuguese_Brazilian",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Tirar do mapa",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Mostrar no mapa",
-                "Carroça marcada no mapa",
-                "Marcador da carroça removido",
+                "No mapa  [<color=yellow><b>Shift+E</b></color>] tirar",
+                "Fora do mapa  [<color=yellow><b>Shift+E</b></color>] marcar",
+                "No mapa",
+                "Fora do mapa",
                 "Carroça",
-                "No mapa");
+                "$1 por perto — carga mais leve");
             AddMapPin(loc, "Portuguese_European",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Tirar do mapa",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Mostrar no mapa",
-                "Carro marcado no mapa",
-                "Marcador do carro removido",
+                "No mapa  [<color=yellow><b>Shift+E</b></color>] tirar",
+                "Fora do mapa  [<color=yellow><b>Shift+E</b></color>] marcar",
+                "No mapa",
+                "Fora do mapa",
                 "Carro",
-                "No mapa");
+                "$1 por perto — carga mais leve");
             AddMapPin(loc, "Spanish",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Quitar del mapa",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Mostrar en el mapa",
-                "Carro marcado en el mapa",
-                "Marcador del carro quitado",
+                "En el mapa  [<color=yellow><b>Shift+E</b></color>] quitar",
+                "Fuera del mapa  [<color=yellow><b>Shift+E</b></color>] marcar",
+                "En el mapa",
+                "Fuera del mapa",
                 "Carro",
-                "En el mapa");
+                "$1 cerca — carga más ligera");
             AddMapPin(loc, "French",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Retirer de la carte",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Afficher sur la carte",
-                "Charrette marquée sur la carte",
-                "Marqueur retiré",
+                "Sur la carte  [<color=yellow><b>Shift+E</b></color>] retirer",
+                "Hors carte  [<color=yellow><b>Shift+E</b></color>] afficher",
+                "Sur la carte",
+                "Hors carte",
                 "Charrette",
-                "Sur la carte");
+                "$1 proches — charge plus légère");
             AddMapPin(loc, "German",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Von der Karte nehmen",
-                "[<color=yellow><b>$KEY_ALT + $KEY_USE</b></color>] Auf der Karte zeigen",
-                "Karren auf der Karte markiert",
-                "Kartenmarkierung entfernt",
+                "Auf der Karte  [<color=yellow><b>Shift+E</b></color>] ausblenden",
+                "Nicht auf der Karte  [<color=yellow><b>Shift+E</b></color>] zeigen",
+                "Auf der Karte",
+                "Nicht auf der Karte",
                 "Karren",
-                "Auf der Karte");
+                "$1 in der Nähe — leichtere Last");
+
+            const string K = "[<color=yellow><b>Shift+E</b></color>]";
+            AddMapPin(loc, "Italian",
+                "Sulla mappa  " + K + " nascondi", "Fuori mappa  " + K + " mostra",
+                "Sulla mappa", "Fuori mappa", "Carro",
+                "$1 vicini — carico più leggero");
+            AddMapPin(loc, "Dutch",
+                "Op de kaart  " + K + " verbergen", "Niet op de kaart  " + K + " tonen",
+                "Op de kaart", "Niet op de kaart", "Kar",
+                "$1 dichtbij — lichtere vracht");
+            AddMapPin(loc, "Swedish",
+                "På kartan  " + K + " dölj", "Inte på kartan  " + K + " visa",
+                "På kartan", "Inte på kartan", "Vagn",
+                "$1 nära — lättare last");
+            AddMapPin(loc, "Polish",
+                "Na mapie  " + K + " ukryj", "Poza mapą  " + K + " pokaż",
+                "Na mapie", "Poza mapą", "Wóz",
+                "$1 w pobliżu — lżejszy ładunek");
+            AddMapPin(loc, "Russian",
+                "На карте  " + K + " скрыть", "Не на карте  " + K + " показать",
+                "На карте", "Не на карте", "Телега",
+                "Рядом: $1 — груз легче");
+            AddMapPin(loc, "Ukrainian",
+                "На мапі  " + K + " сховати", "Не на мапі  " + K + " показати",
+                "На мапі", "Не на мапі", "Віз",
+                "Поруч: $1 — вантаж легший");
+            AddMapPin(loc, "Czech",
+                "Na mapě  " + K + " skrýt", "Mimo mapu  " + K + " zobrazit",
+                "Na mapě", "Mimo mapu", "Vůz",
+                "$1 poblíž — lehčí náklad");
+            AddMapPin(loc, "Hungarian",
+                "A térképen  " + K + " elrejt", "Nincs a térképen  " + K + " mutat",
+                "A térképen", "Nincs a térképen", "Szekér",
+                "$1 a közelben — könnyebb teher");
+            AddMapPin(loc, "Romanian",
+                "Pe hartă  " + K + " ascunde", "Nu e pe hartă  " + K + " arată",
+                "Pe hartă", "Nu e pe hartă", "Car",
+                "$1 aproape — încărcătură mai ușoară");
+            AddMapPin(loc, "Turkish",
+                "Haritada  " + K + " gizle", "Haritada değil  " + K + " göster",
+                "Haritada", "Haritada değil", "Araba",
+                "Yakında $1 kişi — yük hafif");
+            AddMapPin(loc, "Chinese",
+                "在地图上  " + K + " 隐藏", "不在地图上  " + K + " 显示",
+                "在地图上", "不在地图上", "推车",
+                "附近 $1 人 — 负担更轻");
+            AddMapPin(loc, "Chinese_Trad",
+                "在地圖上  " + K + " 隱藏", "不在地圖上  " + K + " 顯示",
+                "在地圖上", "不在地圖上", "推車",
+                "附近 $1 人 — 負擔更輕");
+            AddMapPin(loc, "Japanese",
+                "地図に表示中  " + K + " 隠す", "地図に非表示  " + K + " 表示",
+                "地図に表示", "地図から外した", "荷車",
+                "近くに $1 人 — 荷が軽い");
+            AddMapPin(loc, "Korean",
+                "지도에 표시됨  " + K + " 숨기기", "지도에 없음  " + K + " 표시",
+                "지도에 표시", "지도에서 숨김", "수레",
+                "근처 $1명 — 짐이 가벼워짐");
         }
 
         private static void AddMapPin(
             CustomLocalization loc,
             string language,
-            string hintHide,
-            string hintShow,
+            string hoverOn,
+            string hoverOff,
             string on,
             string off,
             string name,
-            string marked)
+            string buddyHover)
         {
             loc.AddTranslation(language, new Dictionary<string, string>
             {
-                { "wagonborn_mappin_hint_hide", hintHide },
-                { "wagonborn_mappin_hint_show", hintShow },
+                { "wagonborn_mappin_hover_on", hoverOn },
+                { "wagonborn_mappin_hover_off", hoverOff },
                 { "wagonborn_mappin_on", on },
                 { "wagonborn_mappin_off", off },
                 { "wagonborn_mappin_name", name },
-                { "wagonborn_mappin_marked", marked }
+                { "wagonborn_buddy_hover", buddyHover }
             });
         }
 

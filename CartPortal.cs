@@ -26,16 +26,18 @@ namespace Wagonborn
             AccessTools.MethodDelegate<Func<Vagon, GameObject, bool>>(
                 AccessTools.Method(typeof(Vagon), "CanAttach"));
 
+        private static readonly HashSet<Vagon> SeenBuffer = new HashSet<Vagon>();
         private static ZDOID? _pendingReattachCartId;
+        private static Vagon _pendingCart;
         private static bool? _teleportEverythingPresent;
 
         internal static bool IsActive()
         {
-            if (!PluginConfig.EnableCartPortal.Value)
-            {
-                return false;
-            }
+            return PluginConfig.EnableCartPortal.Value && !TeleportEverythingPresent();
+        }
 
+        private static bool TeleportEverythingPresent()
+        {
             if (_teleportEverythingPresent == null)
             {
                 _teleportEverythingPresent =
@@ -48,14 +50,14 @@ namespace Wagonborn
                 }
             }
 
-            return _teleportEverythingPresent != true;
+            return _teleportEverythingPresent == true;
         }
 
         private static Vagon FindAttachedCart(Vector3 pos, Character player)
         {
             int hits = Physics.OverlapSphereNonAlloc(pos, PluginConfig.CartSearchRadius.Value, ColliderBuffer);
             Vagon found = null;
-            HashSet<Vagon> seen = new HashSet<Vagon>();
+            SeenBuffer.Clear();
 
             for (int i = 0; i < hits; i++)
             {
@@ -65,7 +67,7 @@ namespace Wagonborn
                 }
 
                 Vagon cart = ColliderBuffer[i].GetComponentInParent<Vagon>();
-                if (cart == null || !seen.Add(cart))
+                if (cart == null || !SeenBuffer.Add(cart))
                 {
                     continue;
                 }
@@ -157,21 +159,17 @@ namespace Wagonborn
                 nview.ClaimOwnership();
             }
 
-            PlaceCartForAttach(cart, targetPos, targetRot);
-
             ZDO zdo = nview.GetZDO();
-            if (zdo != null)
+            if (zdo == null)
             {
-                zdo.SetPosition(cart.transform.position);
+                return;
             }
 
-            Rigidbody[] bodies = cart.GetComponentsInChildren<Rigidbody>();
-            for (int i = 0; i < bodies.Length; i++)
-            {
-                bodies[i].isKinematic = true;
-            }
+            PlaceCartForAttach(cart, targetPos, targetRot);
+            zdo.SetPosition(cart.transform.position);
 
             _pendingReattachCartId = zdo.m_uid;
+            _pendingCart = cart;
             Jotunn.Logger.LogInfo(
                 $"Wagonborn: cart '{cart.name}' teleported with player to {cart.transform.position}");
 
@@ -216,15 +214,23 @@ namespace Wagonborn
         [HarmonyPatch(typeof(Player), "UpdateTeleport")]
         private static void UpdateTeleportReattachPostfix(Player __instance, bool ___m_teleporting)
         {
-            if (___m_teleporting || !_pendingReattachCartId.HasValue || !IsActive() || __instance == null)
+            if (___m_teleporting || !_pendingReattachCartId.HasValue || __instance == null ||
+                __instance != Player.m_localPlayer)
             {
                 return;
             }
 
             ZDOID id = _pendingReattachCartId.Value;
+            Vagon remembered = _pendingCart;
             _pendingReattachCartId = null;
+            _pendingCart = null;
 
             Vagon cart = FindCartByZdoid(__instance.transform.position, id);
+            if (cart == null && remembered != null && remembered)
+            {
+                cart = remembered;
+            }
+
             if (cart == null)
             {
                 Jotunn.Logger.LogInfo("Wagonborn: cart reattach skipped — cart not found after teleport.");
@@ -261,7 +267,7 @@ namespace Wagonborn
         private static void VagonUpdatePreventDetachPrefix(Vagon __instance, out float __state)
         {
             __state = __instance != null ? __instance.m_detachDistance : 0f;
-            if (!IsActive() || !PluginConfig.PreventCartAutoDetach.Value || __instance == null)
+            if (!PluginConfig.PreventCartAutoDetach.Value || TeleportEverythingPresent() || __instance == null)
             {
                 return;
             }

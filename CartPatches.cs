@@ -6,8 +6,6 @@ namespace Wagonborn
     [HarmonyPatch(typeof(Vagon))]
     internal static class CartPatches
     {
-        private static bool _strippedLegacy;
-
         [HarmonyPrefix]
         [HarmonyPatch(nameof(Vagon.SetMass))]
         private static void SetMassPrefix(Vagon __instance, ref float mass)
@@ -26,6 +24,31 @@ namespace Wagonborn
             mass *= CartCrew.GetBuddyMassMultiplier(__instance);
         }
 
+        // Vanilla only re-weighs every 5 s; hitching and unhitching should feel instant.
+        [HarmonyPostfix]
+        [HarmonyPatch(nameof(Vagon.AttachTo))]
+        private static void AttachToPostfix(Vagon __instance)
+        {
+            RefreshMass(__instance);
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(nameof(Vagon.Detach))]
+        private static void DetachPostfix(Vagon __instance)
+        {
+            RefreshMass(__instance);
+        }
+
+        private static void RefreshMass(Vagon cart)
+        {
+            if (cart == null || cart.m_nview == null || !cart.m_nview.IsValid() || !cart.m_nview.IsOwner())
+            {
+                return;
+            }
+
+            cart.UpdateMass();
+        }
+
         [HarmonyPostfix]
         [HarmonyPatch(nameof(Vagon.GetHoverText))]
         private static void GetHoverTextPostfix(Vagon __instance, ref string __result)
@@ -35,77 +58,43 @@ namespace Wagonborn
                 return;
             }
 
-            if (!_strippedLegacy)
-            {
-                StripOldVisuals(__instance);
-                _strippedLegacy = true;
-            }
-
             Player player = Player.m_localPlayer;
             string level = Mathf.FloorToInt(HaulingSkill.GetLevel(player)).ToString();
             string percent = CartMass.GetPullWeightPercent(player).ToString();
 
-            string line;
-            if (Localization.instance != null)
-            {
-                line = Localization.instance.Localize("$wagonborn_hover", level, percent);
-            }
-            else
-            {
-                line = "Hauling " + level + " — pull weight " + percent + "%";
-            }
-
-            __result += "\n" + line;
+            // Vanilla already Localize'd __result — append plain / already-localized lines only.
+            // Do not leave $KEY_* tokens here (they will not expand in a Postfix).
+            __result += "\n" + L("$wagonborn_hover", level, percent);
 
             if (CartPortal.IsActive() && player != null && __instance.IsAttached(player))
             {
-                string portalHint = Localization.instance != null
-                    ? Localization.instance.Localize("$wagonborn_cart_portal_hint")
-                    : "Portals take the cart";
-                __result += "\n" + portalHint;
+                __result += "\n" + L("$wagonborn_cart_portal_hint");
             }
 
-            if (PluginConfig.EnableBuddyHelp.Value)
+            int helpers = CartCrew.CountHelpers(__instance);
+            if (helpers > 0)
             {
-                string buddy = Localization.instance != null
-                    ? Localization.instance.Localize("$wagonborn_buddy_hint")
-                    : "Friends nearby lighten the load — and train Hauling";
-                __result += "\n" + buddy;
+                __result += "\n" + L("$wagonborn_buddy_hover", helpers.ToString());
             }
 
             if (CartMapPin.IsEnabled())
             {
-                if (CartMapPin.IsMarked(__instance))
-                {
-                    string marked = Localization.instance != null
-                        ? Localization.instance.Localize("$wagonborn_mappin_marked")
-                        : "On the map";
-                    __result += "\n" + marked;
-                }
-
-                string pinHint = Localization.instance != null
-                    ? Localization.instance.Localize(
-                        CartMapPin.IsMarked(__instance)
-                            ? "$wagonborn_mappin_hint_hide"
-                            : "$wagonborn_mappin_hint_show")
-                    : "[$KEY_ALT + $KEY_USE] Map pin";
-                __result += "\n" + pinHint;
+                __result += "\n" + (CartMapPin.IsMarked(__instance)
+                    ? L("$wagonborn_mappin_hover_on")
+                    : L("$wagonborn_mappin_hover_off"));
             }
         }
 
-        private static void StripOldVisuals(Vagon cart)
+        private static string L(string key, params string[] args)
         {
-            Transform visual = cart.transform.Find("Wagonborn_Visual");
-            if (visual != null)
+            if (Localization.instance == null)
             {
-                Object.Destroy(visual.gameObject);
+                return key;
             }
 
-            Transform light = cart.transform.Find("Wagonborn_Light");
-            if (light != null)
-            {
-                Object.Destroy(light.gameObject);
-            }
+            return args != null && args.Length > 0
+                ? Localization.instance.Localize(key, args)
+                : Localization.instance.Localize(key);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Wagonborn
     {
         public const string PluginGUID = "com.blackhearthx.wagonborn";
         public const string PluginName = "Wagonborn";
-        public const string PluginVersion = "1.3.1";
+        public const string PluginVersion = "1.3.2";
 
         internal static WagonbornPlugin Instance { get; private set; }
         internal static Harmony Harmony { get; private set; }

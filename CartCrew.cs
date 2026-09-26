@@ -36,7 +36,8 @@ namespace Wagonborn
 
         internal static int CountHelpers(Vagon cart)
         {
-            if (cart == null || !PluginConfig.EnableBuddyHelp.Value)
+            // Nobody pulling means nobody to help: a parked cart never counts you as a buddy.
+            if (cart == null || !PluginConfig.EnableBuddyHelp.Value || !cart.IsAttached())
             {
                 return 0;
             }
@@ -45,15 +46,30 @@ namespace Wagonborn
             Player.GetPlayersInRange(cart.transform.position, PluginConfig.BuddyRange.Value, PlayerBuffer);
 
             int helpers = 0;
+            bool pullerSeen = false;
             for (int i = 0; i < PlayerBuffer.Count; i++)
             {
                 Player p = PlayerBuffer[i];
-                if (p == null || cart.IsAttached(p))
+                if (p == null)
                 {
                     continue;
                 }
 
+                if (cart.IsAttached(p))
+                {
+                    pullerSeen = true;
+                    continue;
+                }
+
                 helpers++;
+            }
+
+            // Only the cart owner can tell who holds the hitch; elsewhere the puller
+            // is in the list as a plain nearby player.
+            bool isOwner = cart.m_nview != null && cart.m_nview.IsOwner();
+            if (!pullerSeen && !isOwner && helpers > 0)
+            {
+                helpers--;
             }
 
             return Mathf.Min(helpers, PluginConfig.MaxBuddies.Value);
@@ -77,7 +93,7 @@ namespace Wagonborn
         }
 
         /// <summary>
-        /// Local player is helping (not pulling) a cart that is in use nearby.
+        /// Local player is helping (not pulling) a cart someone else is pulling nearby.
         /// </summary>
         internal static Vagon FindCartBeingHelped(Player local)
         {
@@ -87,22 +103,13 @@ namespace Wagonborn
             }
 
             float range = PluginConfig.BuddyRange.Value;
-            Vagon[] carts;
-            try
-            {
-                carts = Object.FindObjectsByType<Vagon>(FindObjectsSortMode.None);
-            }
-            catch
-            {
-                carts = Object.FindObjectsOfType<Vagon>();
-            }
-
+            List<Vagon> carts = Vagon.m_instances;
             Vagon best = null;
             float bestDist = range;
-            for (int i = 0; i < carts.Length; i++)
+            for (int i = 0; i < carts.Count; i++)
             {
                 Vagon cart = carts[i];
-                if (cart == null || !cart.InUse() || cart.IsAttached(local))
+                if (cart == null || !cart.IsAttached() || cart.IsAttached(local))
                 {
                     continue;
                 }

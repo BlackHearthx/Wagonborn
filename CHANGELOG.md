@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.2
+- Hover cleanup: compact lines, no raw $KEY_* tokens
+- Map toggle is **Shift+E** (Valheim AltPlace), not Alt+E
+- Buddy tip only when someone is helping; softer pin messages
+- Parked carts no longer count you as a helper (no fake "1 nearby", no free weight cut)
+- Shift+E no longer takes the cart from a friend who is pulling it; hidden pins are per player now
+- Carts stay on the map when you walk away (last known spot; the host sees every cart)
+- Hauling XP now scales with the real load, so it no longer drops as your skill rises; helpers earn it reliably in co-op
+- Weight updates right away on hitch and unhitch instead of up to 5 seconds later
+- A cart can no longer stay frozen after a portal if the re-hitch misses
+- Steady hitch leash works even with portal transport turned off
+- Map and buddy lines translated into all 20 languages
+- Config: WeightXpScale replaced by LoadXpScale (240); MaxSkillMassReduction capped at 0.8
+
 ## 1.3.1
 - Every cart is on the map by default; Alt+Use hides or shows that cart only (each pin is independent)
 

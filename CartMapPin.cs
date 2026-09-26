@@ -7,22 +7,33 @@ namespace Wagonborn
     /// <summary>
     /// Live minimap/map pins for carts (Hearthwife pattern):
     /// save:false + m_pos every frame + m_pinUpdateRequired so the pin moves while you stand still.
-    /// Every loaded cart is on the map by default; Alt+Use hides or shows that cart only.
+    /// Every cart is on the map by default, even out of loaded range (last known ZDO position).
+    /// Shift+Use hides or shows that cart for the local player only; the choice lives on the
+    /// cart's ZDO under a per-player key and is written by the owner through an RPC, so nobody
+    /// steals ownership (and the hitch) from whoever is pulling.
     /// </summary>
     [HarmonyPatch]
     internal static class CartMapPin
     {
-        /// <summary>ZDO true = player hid this cart's pin. Absent/false = show (default).</summary>
-        private const string HiddenKey = "Wagonborn_MapPinHidden";
+        private const string HiddenKeyPrefix = "Wagonborn_PinHidden_";
+        private const string RpcSetHidden = "Wagonborn_SetPinHidden";
+        private const string CartPrefab = "Cart";
         private const float PinUiScale = 0.85f;
-        private const float RescanInterval = 0.5f;
+        private const float ResyncInterval = 0.5f;
+        private const float PendingHold = 3f;
 
         private static readonly Dictionary<ZDOID, TrackedPin> Pins = new Dictionary<ZDOID, TrackedPin>();
+        private static readonly Dictionary<ZDOID, Vagon> Loaded = new Dictionary<ZDOID, Vagon>();
+        private static readonly HashSet<ZDOID> WorldCarts = new HashSet<ZDOID>();
+        private static readonly HashSet<ZDOID> Wanted = new HashSet<ZDOID>();
+        private static readonly List<ZDOID> ScratchRemove = new List<ZDOID>();
+        private static readonly List<ZDO> ScanBuffer = new List<ZDO>();
+        private static readonly Dictionary<ZDOID, Pending> PendingChoice = new Dictionary<ZDOID, Pending>();
+
         private static AccessTools.FieldRef<Minimap, bool> s_pinUpdateRequired;
         private static Sprite _wheelSprite;
-        private static float _rescanAt;
-        private static readonly List<ZDOID> _scratchRemove = new List<ZDOID>();
-        private static readonly HashSet<ZDOID> _wanted = new HashSet<ZDOID>();
+        private static float _resyncAt;
+        private static int _scanIndex;
 
         private sealed class TrackedPin
         {
@@ -31,9 +42,41 @@ namespace Wagonborn
             public Minimap Map;
         }
 
+        private struct Pending
+        {
+            public bool Hidden;
+            public float Until;
+        }
+
         internal static bool IsEnabled()
         {
             return PluginConfig.EnableCartMapPin != null && PluginConfig.EnableCartMapPin.Value;
+        }
+
+        private static string HiddenKey(long playerId)
+        {
+            return HiddenKeyPrefix + playerId;
+        }
+
+        private static bool IsHiddenForMe(ZDO zdo)
+        {
+            Player local = Player.m_localPlayer;
+            if (zdo == null || local == null)
+            {
+                return false;
+            }
+
+            if (PendingChoice.TryGetValue(zdo.m_uid, out Pending pending))
+            {
+                if (Time.time < pending.Until)
+                {
+                    return pending.Hidden;
+                }
+
+                PendingChoice.Remove(zdo.m_uid);
+            }
+
+            return zdo.GetBool(HiddenKey(local.GetPlayerID()), false);
         }
 
         internal static bool IsMarked(Vagon cart)
@@ -43,46 +86,48 @@ namespace Wagonborn
                 return false;
             }
 
-            // Default on: only hide when the player opted this cart out.
-            return !cart.m_nview.GetZDO().GetBool(HiddenKey, false);
-        }
-
-        internal static void SetMarked(Vagon cart, bool marked)
-        {
-            if (cart == null || cart.m_nview == null || !cart.m_nview.IsValid())
-            {
-                return;
-            }
-
-            if (!cart.m_nview.IsOwner())
-            {
-                cart.m_nview.ClaimOwnership();
-            }
-
-            cart.m_nview.GetZDO().Set(HiddenKey, !marked);
+            return !IsHiddenForMe(cart.m_nview.GetZDO());
         }
 
         internal static void ToggleMarked(Vagon cart)
         {
-            if (!IsEnabled() || cart == null)
-            {
-                return;
-            }
-
-            bool next = !IsMarked(cart);
-            SetMarked(cart, next);
-
             Player local = Player.m_localPlayer;
-            if (local == null)
+            if (!IsEnabled() || cart == null || local == null ||
+                cart.m_nview == null || !cart.m_nview.IsValid())
             {
                 return;
             }
 
-            string key = next ? "$wagonborn_mappin_on" : "$wagonborn_mappin_off";
+            bool nowMarked = !IsMarked(cart);
+            ZDOID id = cart.m_nview.GetZDO().m_uid;
+            PendingChoice[id] = new Pending { Hidden = !nowMarked, Until = Time.time + PendingHold };
+            cart.m_nview.InvokeRPC(RpcSetHidden, local.GetPlayerID(), !nowMarked);
+            _resyncAt = 0f;
+
+            string key = nowMarked ? "$wagonborn_mappin_on" : "$wagonborn_mappin_off";
             string msg = Localization.instance != null
                 ? Localization.instance.Localize(key)
-                : (next ? "Cart marked on the map" : "Cart pin cleared");
+                : (nowMarked ? "On the map" : "Off the map");
             local.Message(MessageHud.MessageType.Center, msg);
+        }
+
+        private static void RPC_SetHidden(Vagon cart, long playerId, bool hidden)
+        {
+            if (cart == null || cart.m_nview == null || !cart.m_nview.IsValid() || !cart.m_nview.IsOwner())
+            {
+                return;
+            }
+
+            ZDO zdo = cart.m_nview.GetZDO();
+            string key = HiddenKey(playerId);
+            if (hidden)
+            {
+                zdo.Set(key, true);
+            }
+            else if (zdo.GetBool(key, false))
+            {
+                zdo.Set(key, false);
+            }
         }
 
         internal static void Tick()
@@ -94,16 +139,17 @@ namespace Wagonborn
             }
 
             Minimap map = Minimap.instance;
-            if (map == null)
+            if (map == null || ZDOMan.instance == null || Player.m_localPlayer == null)
             {
                 ClearAll();
                 return;
             }
 
-            if (Time.time >= _rescanAt)
+            if (Time.time >= _resyncAt)
             {
-                _rescanAt = Time.time + RescanInterval;
-                ResyncWantedCarts(map);
+                _resyncAt = Time.time + ResyncInterval;
+                AdvanceWorldScan();
+                Resync(map);
             }
 
             UpdatePinPositions(map);
@@ -134,21 +180,51 @@ namespace Wagonborn
             }
         }
 
-        private static void ResyncWantedCarts(Minimap map)
+        /// <summary>
+        /// Walks the local ZDO store a slice at a time for cart ZDOs, so carts parked
+        /// far away keep a pin. A host sees the whole world; a client sees every cart
+        /// it has been near this session, at its last synced position.
+        /// </summary>
+        private static void AdvanceWorldScan()
         {
-            _wanted.Clear();
-
-            Vagon[] carts;
+            bool done;
             try
             {
-                carts = Object.FindObjectsByType<Vagon>(FindObjectsSortMode.None);
+                done = ZDOMan.instance.GetAllZDOsWithPrefabIterative(CartPrefab, ScanBuffer, ref _scanIndex);
             }
             catch
             {
-                carts = Object.FindObjectsOfType<Vagon>();
+                ScanBuffer.Clear();
+                _scanIndex = 0;
+                return;
             }
 
-            for (int i = 0; i < carts.Length; i++)
+            if (!done)
+            {
+                return;
+            }
+
+            WorldCarts.Clear();
+            for (int i = 0; i < ScanBuffer.Count; i++)
+            {
+                ZDO zdo = ScanBuffer[i];
+                if (zdo != null && zdo.IsValid())
+                {
+                    WorldCarts.Add(zdo.m_uid);
+                }
+            }
+
+            ScanBuffer.Clear();
+            _scanIndex = 0;
+        }
+
+        private static void Resync(Minimap map)
+        {
+            Loaded.Clear();
+            Wanted.Clear();
+
+            List<Vagon> carts = Vagon.m_instances;
+            for (int i = 0; i < carts.Count; i++)
             {
                 Vagon cart = carts[i];
                 if (cart == null || cart.m_nview == null || !cart.m_nview.IsValid())
@@ -156,49 +232,82 @@ namespace Wagonborn
                     continue;
                 }
 
-                if (!IsMarked(cart))
+                ZDO zdo = cart.m_nview.GetZDO();
+                Loaded[zdo.m_uid] = cart;
+                if (!IsHiddenForMe(zdo))
+                {
+                    Wanted.Add(zdo.m_uid);
+                }
+            }
+
+            foreach (ZDOID id in WorldCarts)
+            {
+                if (Wanted.Contains(id) || Loaded.ContainsKey(id))
                 {
                     continue;
                 }
 
-                ZDOID id = cart.m_nview.GetZDO().m_uid;
-                _wanted.Add(id);
-                EnsurePin(cart, id, map);
-            }
-
-            _scratchRemove.Clear();
-            foreach (KeyValuePair<ZDOID, TrackedPin> pair in Pins)
-            {
-                if (!_wanted.Contains(pair.Key) ||
-                    pair.Value.Cart == null ||
-                    !pair.Value.Cart ||
-                    pair.Value.Map != map)
+                ZDO zdo = ZDOMan.instance.GetZDO(id);
+                if (zdo != null && zdo.IsValid() && !IsHiddenForMe(zdo))
                 {
-                    _scratchRemove.Add(pair.Key);
+                    Wanted.Add(id);
                 }
             }
 
-            for (int i = 0; i < _scratchRemove.Count; i++)
+            ScratchRemove.Clear();
+            foreach (KeyValuePair<ZDOID, TrackedPin> pair in Pins)
             {
-                RemoveTracked(_scratchRemove[i]);
+                if (!Wanted.Contains(pair.Key) || pair.Value.Map != map)
+                {
+                    ScratchRemove.Add(pair.Key);
+                }
+            }
+
+            for (int i = 0; i < ScratchRemove.Count; i++)
+            {
+                RemoveTracked(ScratchRemove[i]);
+            }
+
+            foreach (ZDOID id in Wanted)
+            {
+                Loaded.TryGetValue(id, out Vagon cart);
+                if (Pins.TryGetValue(id, out TrackedPin existing))
+                {
+                    existing.Cart = cart;
+                    continue;
+                }
+
+                Vector3 pos;
+                if (!TryGetPosition(id, cart, out pos))
+                {
+                    continue;
+                }
+
+                AddPin(id, cart, pos, map);
             }
         }
 
-        private static void EnsurePin(Vagon cart, ZDOID id, Minimap map)
+        private static bool TryGetPosition(ZDOID id, Vagon cart, out Vector3 pos)
         {
-            if (Pins.TryGetValue(id, out TrackedPin existing) &&
-                existing.Pin != null &&
-                existing.Map == map &&
-                existing.Cart == cart)
+            if (cart != null && cart)
             {
-                return;
+                pos = cart.transform.position;
+                return true;
             }
 
-            if (existing != null)
+            ZDO zdo = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(id) : null;
+            if (zdo != null && zdo.IsValid())
             {
-                RemoveTracked(id);
+                pos = zdo.GetPosition();
+                return true;
             }
 
+            pos = Vector3.zero;
+            return false;
+        }
+
+        private static void AddPin(ZDOID id, Vagon cart, Vector3 pos, Minimap map)
+        {
             string name = Localization.instance != null
                 ? Localization.instance.Localize("$wagonborn_mappin_name")
                 : "Cart";
@@ -206,7 +315,7 @@ namespace Wagonborn
             try
             {
                 Minimap.PinData pin = map.AddPin(
-                    cart.transform.position,
+                    pos,
                     Minimap.PinType.Icon3,
                     name,
                     save: false,
@@ -231,35 +340,39 @@ namespace Wagonborn
 
         private static void UpdatePinPositions(Minimap map)
         {
-            _scratchRemove.Clear();
+            ScratchRemove.Clear();
+            bool moved = false;
             foreach (KeyValuePair<ZDOID, TrackedPin> pair in Pins)
             {
                 TrackedPin tracked = pair.Value;
-                if (tracked?.Cart == null || !tracked.Cart || tracked.Pin == null)
+                if (tracked?.Pin == null || tracked.Map != map)
                 {
-                    _scratchRemove.Add(pair.Key);
+                    ScratchRemove.Add(pair.Key);
                     continue;
                 }
 
-                if (tracked.Map != map)
+                if (!TryGetPosition(pair.Key, tracked.Cart, out Vector3 pos))
                 {
-                    _scratchRemove.Add(pair.Key);
+                    // ZDO gone: the cart was broken or removed.
+                    ScratchRemove.Add(pair.Key);
                     continue;
                 }
 
-                Vector3 pos = tracked.Cart.transform.position;
                 if (tracked.Pin.m_pos != pos)
                 {
                     tracked.Pin.m_pos = pos;
+                    moved = true;
                 }
-
-                RequestPinUiRefresh(map);
-                ApplyWheelIcon(tracked.Pin);
             }
 
-            for (int i = 0; i < _scratchRemove.Count; i++)
+            for (int i = 0; i < ScratchRemove.Count; i++)
             {
-                RemoveTracked(_scratchRemove[i]);
+                RemoveTracked(ScratchRemove[i]);
+            }
+
+            if (moved)
+            {
+                RequestPinUiRefresh(map);
             }
         }
 
@@ -291,15 +404,15 @@ namespace Wagonborn
                 return;
             }
 
-            _scratchRemove.Clear();
+            ScratchRemove.Clear();
             foreach (ZDOID id in Pins.Keys)
             {
-                _scratchRemove.Add(id);
+                ScratchRemove.Add(id);
             }
 
-            for (int i = 0; i < _scratchRemove.Count; i++)
+            for (int i = 0; i < ScratchRemove.Count; i++)
             {
-                RemoveTracked(_scratchRemove[i]);
+                RemoveTracked(ScratchRemove[i]);
             }
         }
 
@@ -426,6 +539,20 @@ namespace Wagonborn
                 100f);
             _wheelSprite.name = "Wagonborn_MapWheel";
             return _wheelSprite;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Vagon), "Awake")]
+        private static void VagonAwakePostfix(Vagon __instance)
+        {
+            if (__instance == null || __instance.m_nview == null || __instance.m_nview.GetZDO() == null)
+            {
+                return;
+            }
+
+            Vagon cart = __instance;
+            cart.m_nview.Register<long, bool>(RpcSetHidden,
+                (sender, playerId, hidden) => RPC_SetHidden(cart, playerId, hidden));
         }
 
         [HarmonyPrefix]
